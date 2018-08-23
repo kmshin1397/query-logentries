@@ -4,7 +4,7 @@ var pump = require('pump');
 var through2 = require('through2');
 
 module.exports = function (apiKey, queryUrl) {
-	if (!apiKey) { throw new Error('"apiKey" must be defined'); }
+	if(!apiKey) { throw new Error('"apiKey" must be defined'); }
 
 	var defaultRequestOpts = {
 		headers: { 'x-api-key': apiKey },
@@ -12,9 +12,9 @@ module.exports = function (apiKey, queryUrl) {
 	};
 	queryUrl = queryUrl || 'https://rest.logentries.com/query/logs';
 
-	return function (opts, callback) {
-		if (!opts.logId) { throw new Error('"logId" must be defined'); }
-		if (!opts.from) { throw new Error('"from" must be defined'); }
+	return function(opts, callback) {
+		if(!opts.logId) { throw new Error('"logId" must be defined'); }
+		if(!opts.from) { throw new Error('"from" must be defined'); }
 
 		var to = opts.to || Date.now();
 		var query = opts.query || 'where()';
