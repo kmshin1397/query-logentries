@@ -1,9 +1,7 @@
-var rrs = require('request-retry-stream');
-var from2 = require('from2');
-var pump = require('pump');
-var through2 = require('through2');
-
-var verbose = false;
+var rrs = require("request-retry-stream");
+var from2 = require("from2");
+var pump = require("pump");
+var through2 = require("through2");
 
 module.exports = function (apiKey, queryUrl) {
   if (!apiKey) {
@@ -11,10 +9,10 @@ module.exports = function (apiKey, queryUrl) {
   }
 
   var defaultRequestOpts = {
-    headers: { 'x-api-key': apiKey },
+    headers: { "x-api-key": apiKey },
     json: true
   };
-  queryUrl = queryUrl || 'https://rest.logentries.com/query/logs';
+  queryUrl = queryUrl || "https://rest.logentries.com/query/logs";
   return function (opts, callback) {
     if (!opts.logId) {
       throw new Error('"logId" must be defined');
@@ -24,7 +22,7 @@ module.exports = function (apiKey, queryUrl) {
     }
 
     var to = opts.to || Date.now();
-    var query = opts.query || 'where()';
+    var query = opts.query || "where()";
     var perPage = opts.perPage || undefined;
     defaultRequestOpts.timeout = opts.timeout || 30000;
     var pollInterval = opts.pollInterval || 3000;
@@ -78,20 +76,14 @@ module.exports = function (apiKey, queryUrl) {
     });
 
     function requestQuery(reqOpts, cb) {
-      if (verbose) console.log('Making request... ');
-      // console.log(reqOpts);
       rrs.get(reqOpts, function (err, res, body) {
         if (err) {
-          console.log('Got error: ');
-          console.log(err);
           return cb(err);
         }
         if (res.statusCode === 202 && hasLink(body)) {
-          if (verbose) console.log('Got response...');
-          // console.log(body);
           return waitForResult(body.links[0].href);
         }
-        cb(new Error('did not receive poll endpoint from logEntries'));
+        cb(new Error("did not receive poll endpoint from logEntries"));
       });
 
       function waitForResult(pollUrl) {
@@ -101,22 +93,17 @@ module.exports = function (apiKey, queryUrl) {
         poll();
 
         function poll() {
-          if (verbose) console.log('Making poll request... ');
-          // console.log(pollOpts);
           rrs.get(pollOpts, function (err, res, pollBody) {
             if (err) {
               return cb(err);
             }
             if (pollBody.progress !== undefined && pollBody.progress <= 100) {
-              console.log('Request progress: ' + pollBody.progress);
               return setTimeout(poll, pollInterval);
             }
-            if (verbose) console.log('Got poll response!');
-            // console.log(pollBody);
             if (
               res.statusCode === 200 &&
               hasLink(pollBody) &&
-              pollBody.links[0].rel === 'Next'
+              pollBody.links[0].rel === "Next"
             ) {
               return extractMessages(pollBody, opts, function (err, messages) {
                 if (err) {
@@ -157,14 +144,13 @@ function extractMessages(body, opts, cb) {
             if (opts.ignoreInvalidJson) {
               return null;
             }
-            if (typeof opts.onInvalidJson === 'function') {
+            if (typeof opts.onInvalidJson === "function") {
               return opts.onInvalidJson(event.message);
             }
             throw e;
           }
         })
         .filter(Boolean);
-      // console.log(messages);
       return cb(null, messages);
     } catch (e) {
       return cb(e);
